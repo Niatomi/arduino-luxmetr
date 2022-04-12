@@ -1,0 +1,5 @@
+{
+    "sketch": "luxmetr.ino",
+    "output": "build",
+    "board": "arduino:avr:uno"
+}
