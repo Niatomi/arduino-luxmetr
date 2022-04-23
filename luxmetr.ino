@@ -5,7 +5,7 @@
 volatile unsigned int analog_lux = 0;
 volatile unsigned long globalTimeBufferMillis = 0;
 
-LiquidCrystal_I2C lcd (0x27, 20, 4);
+LiquidCrystal_I2C lcd (0x27, 16, 2);
 
 void setup() {
 	Serial.begin(9600);
@@ -25,15 +25,15 @@ void loop() {
 
 void showLuxOnLcd() {
 
-    showHeadInfo();
+    // showHeadInfo();
 
 	showValueByExpFunc();
 
-    showValueByLogFunc();
+    // showValueByLogFunc();
 
-    showValueByLinearFunc();
+    // showValueByLinearFunc();
 
-    improvedDelay(100);
+    improvedDelay(50);
 
     lcd.clear();
 
@@ -46,15 +46,34 @@ void showHeadInfo() {
 }
 
 void showValueByExpFunc() {
-    lcd.setCursor(0, 1);
-    lcd.print("exp: ");
+    float expLuxValue;
 
-    float expLuxValue = 0.1652*exp(0.0095*analog_lux);
+    if (analog_lux <= 600) {
+        expLuxValue = 0.9*exp(0.0073*analog_lux);
+    } else if (analog_lux > 600 && analog_lux <= 697) {
+        expLuxValue = 0*459*analog_lux - 200;
+    } else if (analog_lux >= 698 && analog_lux <=  783) {
+        expLuxValue = 0.3016*analog_lux - 87.258;
+    } else if (analog_lux >= 784 && analog_lux <= 831) {
+        expLuxValue = 2.1798*analog_lux - 1568.1;
+    } else if (analog_lux >= 832 && analog_lux <= 848) {
+        expLuxValue = 4.3614*analog_lux - 3409.6;
+    } else if (analog_lux >= 849 && analog_lux <= 869) {
+        expLuxValue = 5.6583 - 4529.1;
+    } else if (analog_lux >= 870 && analog_lux <= 880) {
+        expLuxValue = 5.6583*analog_lux - 4529.1;
+    } else {
+        expLuxValue = 500;
+    }
+
+    lcd.setCursor(0, 0);
+    lcd.print("lux: ");
+
     lcd.print(expLuxValue);
 }
 
 void showValueByLogFunc() {
-    lcd.setCursor(0, 2);
+    lcd.setCursor(0, 1);
     lcd.print("ln: ");
 
     float lnLuxValue = 2292.1*log(analog_lux)-14969;
