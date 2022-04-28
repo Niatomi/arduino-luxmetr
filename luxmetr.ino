@@ -51,10 +51,10 @@ float getLux() {
 }
 
 
-float getFrequency() {
+double getFrequency() {
 
-    int time[4] = {-1, -1 , -1, -1};
-    float hz = 0;
+    unsigned int time[2] = {-1, -1};
+    double hz = 0;
     int i = 0;
 
     float avarageSeries = 0;
@@ -69,41 +69,58 @@ float getFrequency() {
 
     float step = 0;
 
-
-    while (time[3] == -1) {
-        buffer = getLux(); 
-
-        if (buffer > avarage*avarage) {
-
-            step = buffer - avarage;
-
-            avarageSeries = buffer;
-            avarage = buffer;
-            getLuxCounter = 1;
-            
+    while (time[1] == -1) {
+        // Serial.println(getLux());
+        if (getLux() >= 40 && permissionOnWrite) {
+            permissionOnWrite = false;
             time[i] = millis();
             i++;
         }
 
-        if (step > buffer) {
-            avarageSeries = buffer;
-            avarage = buffer;
-            getLuxCounter = 1;
-            permissionOnWrite = false;
+        if (getLux() <= 20) {
+            permissionOnWrite = true;
         }
-
-        if (permissionOnWrite) {
-            avarageSeries += buffer;
-            getLuxCounter++;
-            avarage = avarageSeries / getLuxCounter;
-
-        }
-
-        permissionOnWrite = true;
-
     }
 
-    hz = time[3] - time[0];
+
+    // while (time[3] == -1) {
+    //     buffer = getLux(); 
+
+    //     if (buffer > avarage*avarage) {
+
+    //         step = buffer - avarage;
+
+    //         avarageSeries = buffer;
+    //         avarage = buffer;
+    //         getLuxCounter = 1;
+            
+    //         time[i] = millis();
+    //         i++;
+    //     }
+
+    //     if (step > buffer) {
+    //         avarageSeries = buffer;
+    //         avarage = buffer;
+    //         getLuxCounter = 1;
+    //         permissionOnWrite = false;
+    //     }
+
+    //     if (permissionOnWrite) {
+    //         avarageSeries += buffer;
+    //         getLuxCounter++;
+    //         avarage = avarageSeries / getLuxCounter;
+
+    //     }
+
+    //     permissionOnWrite = true;
+
+    // }
+
+    unsigned int mill = time[1] - time[0] + 10;
+    Serial.println(time[0]);
+    Serial.println(time[1]);
+    Serial.println();
+    hz = (double)1000 /(double) mill;
     return hz;
 }
 
