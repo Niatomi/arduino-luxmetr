@@ -1,92 +1,116 @@
-#include <LiquidCrystal_I2C.h>
+// #include <LiquidCrystal_I2C.h>
 
 #define LUX A0
 
 volatile unsigned int analog_lux = 0;
 volatile unsigned long globalTimeBufferMillis = 0;
 
-LiquidCrystal_I2C lcd (0x27, 16, 2);
+// LiquidCrystal_I2C lcd (0x27, 16, 2);
 
 void setup() {
-	Serial.begin(9600);
-	
-	lcd.init();
-    lcd.backlight();
-    
-	pinMode(LUX, INPUT);
-    lcd.clear();
-    
+    Serial.begin(115200);
+    pinMode(LUX, INPUT);
+
 }
 
 void loop() {
+    Serial.print(getFrequency());
+    Serial.println(" Hz");
+    getLux();
+}
+
+float getLux() {
     analog_lux = analogRead(LUX);
-    showLuxOnLcd();
-}
 
-void showLuxOnLcd() {
+    float lux_value = 0;
 
-    // showHeadInfo();
-
-	showValueByExpFunc();
-
-    // showValueByLogFunc();
-
-    // showValueByLinearFunc();
-
-    improvedDelay(50);
-
-    lcd.clear();
-
-}
-
-void showHeadInfo() {
-    lcd.setCursor(0, 0);
-    lcd.print("sensor value: ");
-    lcd.print(analog_lux);
-}
-
-void showValueByExpFunc() {
-    float expLuxValue;
-
-    if (analog_lux <= 600) {
-        expLuxValue = 0.9*exp(0.0073*analog_lux);
-    } else if (analog_lux > 600 && analog_lux <= 697) {
-        expLuxValue = 0*459*analog_lux - 200;
-    } else if (analog_lux >= 698 && analog_lux <=  783) {
-        expLuxValue = 0.3016*analog_lux - 87.258;
-    } else if (analog_lux >= 784 && analog_lux <= 831) {
-        expLuxValue = 2.1798*analog_lux - 1568.1;
-    } else if (analog_lux >= 832 && analog_lux <= 848) {
-        expLuxValue = 4.3614*analog_lux - 3409.6;
-    } else if (analog_lux >= 849 && analog_lux <= 869) {
-        expLuxValue = 5.6583 - 4529.1;
-    } else if (analog_lux >= 870 && analog_lux <= 880) {
-        expLuxValue = 5.6583*analog_lux - 4529.1;
+    //0..50
+    if (analog_lux <= 85) {
+        lux_value = 0.6965 * analog_lux - 10.754;
+    //50..200
+    } else if (analog_lux > 85 && analog_lux <= 226) {
+        lux_value = 1.0591 * analog_lux - 48.089 ;
+    //200..300
+    } else if (analog_lux > 226 && analog_lux <= 287) {
+        lux_value = 1.8765 * analog_lux - 236.17;
+    //300..400
+    } else if (analog_lux > 287 && analog_lux <= 335) {
+        lux_value = 2.1542 * analog_lux - 322.5;
+    //400..1000
+    } else if (analog_lux > 335 && analog_lux <= 564) {
+        lux_value = 2.5933 * analog_lux - 481.88;
+    //1000..2000
+    } else if (analog_lux > 564 && analog_lux <= 693) {
+        lux_value = 59.721*exp(0.005*analog_lux);
     } else {
-        expLuxValue = 500;
+        lux_value = 1;
     }
 
-    lcd.setCursor(0, 0);
-    lcd.print("lux: ");
+    return lux_value;
 
-    lcd.print(expLuxValue);
 }
 
-void showValueByLogFunc() {
-    lcd.setCursor(0, 1);
-    lcd.print("ln: ");
 
-    float lnLuxValue = 2292.1*log(analog_lux)-14969;
-    lcd.print(lnLuxValue);
+float getFrequency() {
+
+    int time[4] = {-1, -1 , -1, -1};
+    float hz = 0;
+    int i = 0;
+
+    float avarageSeries = 0;
+    float avarage = 0;
+    unsigned int getLuxCounter = 0;
+
+    getLuxCounter++;
+    float buffer = 0;
+    avarageSeries += buffer;
+
+    boolean permissionOnWrite = true;
+
+    float step = 0;
+
+
+    while (time[3] == -1) {
+        buffer = getLux(); 
+
+        if (buffer > avarage*avarage) {
+
+            step = buffer - avarage;
+
+            avarageSeries = buffer;
+            avarage = buffer;
+            getLuxCounter = 1;
+            
+            time[i] = millis();
+            i++;
+        }
+
+        if (step > buffer) {
+            avarageSeries = buffer;
+            avarage = buffer;
+            getLuxCounter = 1;
+            permissionOnWrite = false;
+        }
+
+        if (permissionOnWrite) {
+            avarageSeries += buffer;
+            getLuxCounter++;
+            avarage = avarageSeries / getLuxCounter;
+
+        }
+
+        permissionOnWrite = true;
+
+    }
+
+    hz = time[3] - time[0];
+    return hz;
 }
 
-void showValueByLinearFunc() {
-    lcd.setCursor(0, 3);
-    lcd.print("linear: ");
+void swap() {
 
-    float linearLuxValue = 2.9114*analog_lux - 1978.5;
-    lcd.print(linearLuxValue);
 }
+
 
 void improvedDelay(unsigned int waitTime) {
     globalTimeBufferMillis = millis();
