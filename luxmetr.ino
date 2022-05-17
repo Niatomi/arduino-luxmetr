@@ -1,24 +1,32 @@
-// #include <LiquidCrystal_I2C.h>
-
 #define LUX A0
 
 volatile unsigned int analog_lux = 0;
 volatile unsigned long globalTimeBufferMillis = 0;
 
-// LiquidCrystal_I2C lcd (0x27, 16, 2);
-
+/*
+* Запуск serial порта
+* Инициализируем ногу для люксметра
+*/
 void setup() {
     Serial.begin(115200);
     pinMode(LUX, INPUT);
-
 }
 
+/*
+* Выводим значение люксметра и частоту света
+*/
 void loop() {
     Serial.print(getFrequency());
     Serial.println(" Hz");
-    getLux();
+    Serial.print(getLux());
+    Serial.println(" лк");
+    Serial.println();
 }
 
+/*
+* Высчитваем люксы по высчитанному полиному в разных диапазонах
+* @return значение в люксах 
+*/
 float getLux() {
     analog_lux = analogRead(LUX);
 
@@ -50,7 +58,11 @@ float getLux() {
 
 }
 
-
+/*
+* Высчитываем значение частоты
+* Находим время двух амплитудных значений, 1000/(разница их появлений) = частота в герцах
+* @return частота света
+*/
 double getFrequency() {
 
     unsigned int time[2] = {-1, -1};
@@ -82,59 +94,7 @@ double getFrequency() {
         }
     }
 
-
-    // while (time[3] == -1) {
-    //     buffer = getLux(); 
-
-    //     if (buffer > avarage*avarage) {
-
-    //         step = buffer - avarage;
-
-    //         avarageSeries = buffer;
-    //         avarage = buffer;
-    //         getLuxCounter = 1;
-            
-    //         time[i] = millis();
-    //         i++;
-    //     }
-
-    //     if (step > buffer) {
-    //         avarageSeries = buffer;
-    //         avarage = buffer;
-    //         getLuxCounter = 1;
-    //         permissionOnWrite = false;
-    //     }
-
-    //     if (permissionOnWrite) {
-    //         avarageSeries += buffer;
-    //         getLuxCounter++;
-    //         avarage = avarageSeries / getLuxCounter;
-
-    //     }
-
-    //     permissionOnWrite = true;
-
-    // }
-
     unsigned int mill = time[1] - time[0] + 10;
-    Serial.println(time[0]);
-    Serial.println(time[1]);
-    Serial.println();
     hz = (double)1000 /(double) mill;
     return hz;
-}
-
-void swap() {
-
-}
-
-
-void improvedDelay(unsigned int waitTime) {
-    globalTimeBufferMillis = millis();
-    boolean cooldownState = true;
-
-    while (cooldownState) {
-        if (millis() - globalTimeBufferMillis > waitTime) 
-            cooldownState = false;
-    }
 }
