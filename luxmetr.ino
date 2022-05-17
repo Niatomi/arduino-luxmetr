@@ -1,7 +1,6 @@
 #define LUX A0
 
 volatile unsigned int analog_lux = 0;
-volatile unsigned long globalTimeBufferMillis = 0;
 
 /*
 * Запуск serial порта
